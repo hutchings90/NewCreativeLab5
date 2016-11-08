@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Space Cadet</title>
+        <link rel="stylesheet" href="stylesheets/style.css"/>
+        <script src="javascripts/angular.min.js"></script>
+        <script src="javascripts/SpaceCadet.js"></script>
+    </head>
+    <body>
+        <audio id="main-menu-music" autoplay loop>
+            <source src="sounds/mainMenu.wav">
+        </audio>
+        <audio id="game-music" loop>
+            <source src="sounds/spaceTrip.mp3">
+        </audio>
+        <div id="celestials"></div>
+        <div id="lasers"></div>
+        <div id="enemies"></div>
+        <img id="ship" class="game-object" src="images/spaceShip.png"/>
+        <img id="power-up" class="game-object">
+        <div id="points">0</div>
+        <form id="main-menu">
+            <div><input id="player-name" type="text" value="" placeholder="NAME"/></div>
+            <div><input id="start-button" type="submit" value="START"/></div>
+        </form>
+        <form id="game-over">
+            <div id="ending-score"></div>
+            <div><input id="restart-button" type="submit" value="MAIN MENU"/></div>
+        </form>
+    </body>
+</html>
