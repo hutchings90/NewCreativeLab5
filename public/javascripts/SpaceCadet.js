@@ -1,5 +1,8 @@
 const RATIO = 0.0003;
-var mainHeight, mainWidth, gameArea, mainMenuMusic, gameMusic, laserSound, celestials, lasers, enemies, ship, powerUp, points, mainMenu, gameOverMenu, playerName, animationTimer, gameOver;
+const ENEMY_SPEED = 6;
+const LASER_SPEED = 20;
+const SHIP_SPEED = 8;
+var mainHeight, mainWidth, gameArea, mainMenuMusic, gameMusic, laserSound, celestials, lasers, enemies, ship, powerUp, points, mainMenu, gameOverMenu, playerName, animationTimer, enemyTimer, gameOver;
 
 window.onload = function(){
     gameArea = mainHeight * mainWidth;
@@ -11,12 +14,12 @@ window.onload = function(){
     enemies = document.getElementById('enemies');
     ship = document.getElementById('ship');
     ship.left = 10;
-    ship.speed = 5;
+    ship.speed = SHIP_SPEED;
     ship.vertical = "";
     ship.horizontal = "";
     ship.fire = -1;
     ship.laserNumber = 0;
-    gameOver = false;
+    gameOver = true;
     powerUp = document.getElementById('power-up');
     points = document.getElementById('points');
     mainMenu = document.getElementById('main-menu');
@@ -30,8 +33,9 @@ window.onload = function(){
         ev.preventDefault();
         showMainMenu();
     }
+    document.onkeydown = keydownHandler;
+    document.onkeyup = keyupHandler;
     setPositions();
-    animationTimer = setInterval(animate, 30);
 }
 
 window.onresize = setPositions;
@@ -65,6 +69,7 @@ function start(){
         playerName.className = "alert";
         return;
     }
+    points.innerHTML = 0;
     playerName.style.borderColor = "white";
     playerName.className = "";
     mainMenuMusic.pause();
@@ -72,13 +77,18 @@ function start(){
     gameMusic.play();
     mainMenu.style.display = "none";
     points.style.display = "block";
-//    setTimeout(end, 5000);
-    document.onkeydown = keydownHandler;
-    document.onkeyup = keyupHandler;
+    enemyTimer = setTimeout(makeEnemyGroup, Math.random() * 10000 + 5000);
+    gameOver = false;
 }
 
 function end(){
     gameOver = true;
+    clearInterval(enemyTimer);
+    clearInterval(ship.fire);
+    ship.fire = -1;
+    removeEnemies();
+    ship.horizontal = "";
+    ship.vertical = "";
     gameOverMenu.style.display = "inline-block";
 }
 
@@ -92,33 +102,46 @@ function animate(){
 function animateCelestials(array){
     for(var i = 0, length = array.length; i < length; i++){
         var element = array[i];
-        element.left -= element.speed;
-        if(element.left < element.dimensions){
-            element.left += mainWidth - element.dimensions - 2;
+        if(element.left - element.speed < 0){
+            element.left += mainWidth - element.dimensions - element.speed;
             element.style.top = Math.floor(Math.random() * (mainHeight - element.dimensions)).toString() + "px";
+        }
+        else{
+            element.left -= element.speed;
         }
         element.style.left = element.left.toString() + "px";
     }
 }
 
-function animateEnemies(){
-    
+function animateEnemies(enemyList){
+    for(var i = 0; i < enemyList.length; i++){
+        var group = enemyList[i];
+        group.move(group);
+        if(!group.lastChild){
+            if(group.parentNode == enemies){
+                enemies.removeChild(group);
+            }
+        }
+    }
 }
 
 function animateLasers(){
     var laserArray = lasers.childNodes;
-    for(var i = 0, length = laserArray.length; i < length; i++){
+    for(var i = 0; i < laserArray.length; i++){
         var laser = laserArray[i];
-        if(laser.left + (laser.direction * 8) >= mainWidth - laser.width){
+        if(laser.left + (laser.direction * LASER_SPEED) >= mainWidth - laser.width){
             lasers.removeChild(laser);
+            i--;
         }
         else{
-            laser.left += laser.direction * 8;
+            laser.left += laser.direction * LASER_SPEED;
             if(laser.direction == 1){
-                points += isEnemy(laser);
+                points.innerHTML = Number(points.innerHTML) + isEnemy(laser);
             }
             else{
-                lives -= isShip(laser);
+                if(isShip(laser)){
+                    end();
+                }
             }
             laser.style.left = laser.left + "px";
         }
@@ -127,20 +150,56 @@ function animateLasers(){
 
 function isEnemy(laser){
     var enemyArray = enemies.childNodes;
-    for(var i = 0, length = enemyArray.length; i < length; i++){
-        var enemy = enemyArray[i];
-        if(laser.top - enemy.top < enemy.height || enemy.top - laser.top < laser.height){
-            if(laser.left - enemy.left < enemy.width || enemy.left - laser.left < laser.width){
-                enemies.removeChild(enemy);
-                return enemy.points;
+    for(var i = 0; i < enemyArray.length; i++){
+        var enemyGroup = enemyArray[i].childNodes;
+        for(var j = 0; j < enemyGroup.length; j++){
+            var enemy = enemyGroup[j];
+            if(isCollision(laser, enemy)){
+                    var points = enemy.points;
+                    enemyArray[i].removeChild(enemy);
+                    if(!enemyArray[i].lastChild)
+                        enemies.removeChild(enemyArray[i]);
+                    return points;
             }
         }
     }
     return 0;
 }
 
-function isShip(){
-    
+function isShip(collisionObject){
+    return isCollision(ship, collisionObject)
+}
+
+function isCollision(object1, object2){
+    if(!isVerticalCollision(object1, object2)) return false;
+    if(!isHorizontalCollision(object1, object2)) return false;
+    return true;
+}
+
+function isVerticalCollision(object1, object2){
+    if(object1.top > object2.top){
+        if(object1.top - object2.top < object2.height){
+            return true;
+        }
+        return false;
+    }
+    if(object2.top - object1.top < object1.height){
+        return true;
+    }
+    return false;
+}
+
+function isHorizontalCollision(object1, object2){
+    if(object1.left > object2.left){
+        if(object1.left - object2.left < object2.width){
+            return true;
+        }
+        return false;
+    }
+    if(object2.left - object1.left < object1.width){
+        return true;
+    }
+    return false;
 }
 
 function animateShip(){
@@ -270,4 +329,106 @@ function makeCelestial(){
     element.style.zIndex = element.speed - 6;
     element.className = "game-object";
     return element;
+}
+
+function removeEnemies(){
+    while(enemies.lastChild){
+        var removingNode = enemies.lastChild;
+        while(removingNode.lastChild){
+            removingNode.removeChild(removingNode.lastChild);
+        }
+        enemies.removeChild(removingNode);
+    }
+}
+
+function makeEnemyGroup(){
+    enemies.appendChild(makeEnemies());
+    enemyTimer = setTimeout(makeEnemyGroup, Math.random() * 5000 + 2000);
+}
+
+function makeEnemies(){
+    var enemy = Math.floor(Math.random() * 3);
+    var laser = Math.floor(Math.random() * 2);
+    var enemyGroup = document.createElement("div");
+    var startingTop = Math.floor(Math.random() * mainHeight);
+    enemyGroup.className = "game-object";
+    for(var i = 0, enemyCount = Math.floor(Math.random() * 2) + 3; i < enemyCount; i++){
+        enemyGroup.appendChild(makeEnemy(enemy, laser, i, startingTop));
+    }
+    enemyGroup.startingTop = startingTop;
+    enemyGroup.move = determineEnemyMove(Math.floor(Math.random() * 2));
+    return enemyGroup;
+}
+
+function makeEnemy(imageNumber, laserNumber, count, startingTop){
+    var enemy = document.createElement("img");
+    enemy.className = "game-object";
+    enemy.src = "images/enemy" + imageNumber + ".png";
+    enemy.laser = laserNumber;
+    enemy.points = 100 + (100 * imageNumber);
+    enemy.top = startingTop;
+    enemy.left = mainWidth + ((enemy.width + 10) * count);
+    enemy.style.top = enemy.top + "px";
+    enemy.style.left = enemy.left + "px";
+    return enemy;
+}
+
+function determineEnemyMove(number){
+    return number == 0 ? enemyMove1 : enemyMove2;
+}
+
+function enemyMove1(enemyGroup){
+    var group = enemyGroup.childNodes;
+    for(var i = 0; i < group.length; i++){
+        var enemy = group[i];
+        if(enemy.left - ENEMY_SPEED < 0){
+            enemyGroup.removeChild(enemy);
+            i--;
+        }
+        else if(isShip(enemy)){
+            end();
+            return;
+        }
+        else{
+            if(enemy.left < mainWidth){
+                if(enemy.top + enemy.height + ENEMY_SPEED > mainHeight){
+                    enemy.top -= mainHeight - ENEMY_SPEED;
+                }
+                else{
+                    enemy.top += ENEMY_SPEED;
+                }
+            }
+            enemy.left -= ENEMY_SPEED;
+            enemy.style.top = enemy.top + "px";
+            enemy.style.left = enemy.left + "px";
+        }
+    }
+}
+
+function enemyMove2(enemyGroup){
+    var group = enemyGroup.childNodes;
+    for(var i = 0; i < group.length; i++){
+        var enemy = group[i];
+        if(enemy.left - ENEMY_SPEED < 0){
+            enemyGroup.removeChild(enemy);
+            i--;
+        }
+        else if(isShip(enemy)){
+            end();
+            return;
+        }
+        else{
+            if(enemy.left < mainWidth){
+                if(enemy.top - ENEMY_SPEED < 0){
+                    enemy.top += mainHeight - enemy.height;
+                }
+                else{
+                    enemy.top -= ENEMY_SPEED;
+                }
+            }
+            enemy.left -= ENEMY_SPEED;
+            enemy.style.top = enemy.top + "px";
+            enemy.style.left = enemy.left + "px";
+        }
+    }
 }
