@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comments!</title>
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="javascripts/test.js"></script>
+    <script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+    <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
+    <!-- Material Design icon font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title">Comments</span>
+            <!-- Add spacer, to align navigation to the right -->
+            <div class="mdl-layout-spacer"></div>
+        </div>
+    </header>
+</div>
+    <main class="mdl-layout__content">
+        <div class="page-content">
+<br>
+<br>
+<br>
+<br>
+<form id="commentForm" action="">
+  <label for="name">Name: </label><input type="text" id="Name" placeholder="Name"><br>
+  <label for="comment">comment: </label><input type="text" id="Comment" placeholder="Comment"><br>
+</form>
+<br>
+<button id="serialize"type="submit" class="mdl-chip"><span class="mdl-chip__text">Submit Comment</span></button>
+<button id="getThem" type="submit" class="mdl-chip"><span class="mdl-chip__text">Show Comments</span></button>
+<button id="del" type="submit" class="mdl-chip"><span class="mdl-chip__text">Delete Comments</span></button>
+
+<br>
+<div id="json"></div>
+<div id="done"></div>
+<div id="comments"></div>
+</body>
+</html>
+
