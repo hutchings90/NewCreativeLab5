@@ -45,7 +45,7 @@
 
 #main-menu{
     padding: 15px;
-    display: inline-block;
+    display: none;
     text-align: center;
 }
 
@@ -58,6 +58,15 @@
 }
 
 #game-over{
+    display: inline-block;
+}
+
+#high-scores{
+    color: white;
+    background-color: black;
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid white;
     display: none;
 }
 
@@ -73,4 +82,13 @@ input{
 body{
     text-align: center;
     background-color: black;
+    overflow: hidden;
+}
+
+td:first-child{
+    text-align: left;
+}
+
+td:nth-child(2){
+    text-align: right;
 }

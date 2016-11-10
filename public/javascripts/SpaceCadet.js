@@ -1,8 +1,8 @@
 const RATIO = 0.0003;
-const ENEMY_SPEED = 6;
+const BASE_ENEMY_SPEED = 6;
 const LASER_SPEED = 20;
 const SHIP_SPEED = 8;
-var mainHeight, mainWidth, gameArea, mainMenuMusic, gameMusic, laserSound, celestials, lasers, enemies, ship, powerUp, points, mainMenu, gameOverMenu, playerName, animationTimer, enemyTimer, gameOver;
+var mainHeight, mainWidth, gameArea, mainMenuMusic, gameMusic, laserSound, celestials, lasers, enemies, ship, powerUp, points, mainMenu, highScores, gameOverMenu, playerName, animationTimer, enemyTimer, gameOver;
 
 window.onload = function(){
     gameArea = mainHeight * mainWidth;
@@ -25,13 +25,10 @@ window.onload = function(){
     mainMenu = document.getElementById('main-menu');
     gameOverMenu = document.getElementById('game-over');
     playerName = document.getElementById('player-name');
-    document.getElementById('start-button').onclick = function(ev){
-        ev.preventDefault();
-        start();
-    }
+    highScores = document.getElementById('high-scores');
     document.getElementById('restart-button').onclick = function(ev){
         ev.preventDefault();
-        showMainMenu();
+        start();
     }
     document.onkeydown = keydownHandler;
     document.onkeyup = keyupHandler;
@@ -64,11 +61,6 @@ function showMainMenu(){
 }
 
 function start(){
-    if(playerName.value == ""){
-        playerName.style.borderColor = "red";
-        playerName.className = "alert";
-        return;
-    }
     points.innerHTML = 0;
     playerName.style.borderColor = "white";
     playerName.className = "";
@@ -76,8 +68,10 @@ function start(){
     gameMusic.currentTime = 0;
     gameMusic.play();
     mainMenu.style.display = "none";
+    highScores.style.display = "none"
+    gameOverMenu.style.display = "none";
     points.style.display = "block";
-    enemyTimer = setTimeout(makeEnemyGroup, Math.random() * 10000 + 5000);
+    enemyTimer = setTimeout(makeEnemyGroup, (Math.random() * 5000) + 5000);
     gameOver = false;
 }
 
@@ -89,7 +83,7 @@ function end(){
     removeEnemies();
     ship.horizontal = "";
     ship.vertical = "";
-    gameOverMenu.style.display = "inline-block";
+    mainMenu.style.display = "inline-block";
 }
 
 function animate(){
@@ -157,6 +151,7 @@ function isEnemy(laser){
             if(isCollision(laser, enemy)){
                     var points = enemy.points;
                     enemyArray[i].removeChild(enemy);
+                    lasers.removeChild(laser);
                     if(!enemyArray[i].lastChild)
                         enemies.removeChild(enemyArray[i]);
                     return points;
@@ -343,7 +338,7 @@ function removeEnemies(){
 
 function makeEnemyGroup(){
     enemies.appendChild(makeEnemies());
-    enemyTimer = setTimeout(makeEnemyGroup, Math.random() * 5000 + 2000);
+    enemyTimer = setTimeout(makeEnemyGroup, (Math.random() * 2500) + 500);
 }
 
 function makeEnemies(){
@@ -356,7 +351,7 @@ function makeEnemies(){
         enemyGroup.appendChild(makeEnemy(enemy, laser, i, startingTop));
     }
     enemyGroup.startingTop = startingTop;
-    enemyGroup.move = determineEnemyMove(Math.floor(Math.random() * 2));
+    enemyGroup.move = determineEnemyMove(Math.floor(Math.random() * 3));
     return enemyGroup;
 }
 
@@ -366,6 +361,7 @@ function makeEnemy(imageNumber, laserNumber, count, startingTop){
     enemy.src = "images/enemy" + imageNumber + ".png";
     enemy.laser = laserNumber;
     enemy.points = 100 + (100 * imageNumber);
+    enemy.speed = (imageNumber * 5) + BASE_ENEMY_SPEED;
     enemy.top = startingTop;
     enemy.left = mainWidth + ((enemy.width + 10) * count);
     enemy.style.top = enemy.top + "px";
@@ -374,14 +370,18 @@ function makeEnemy(imageNumber, laserNumber, count, startingTop){
 }
 
 function determineEnemyMove(number){
-    return number == 0 ? enemyMove1 : enemyMove2;
+    switch(number){
+    case 0: return enemyMove1;
+    case 1: return enemyMove2;
+    }
+    return enemyMove3;
 }
 
 function enemyMove1(enemyGroup){
     var group = enemyGroup.childNodes;
     for(var i = 0; i < group.length; i++){
         var enemy = group[i];
-        if(enemy.left - ENEMY_SPEED < 0){
+        if(enemy.left - enemy.speed < 0){
             enemyGroup.removeChild(enemy);
             i--;
         }
@@ -391,14 +391,14 @@ function enemyMove1(enemyGroup){
         }
         else{
             if(enemy.left < mainWidth){
-                if(enemy.top + enemy.height + ENEMY_SPEED > mainHeight){
-                    enemy.top -= mainHeight - ENEMY_SPEED;
+                if(enemy.top + enemy.height + enemy.speed > mainHeight){
+                    enemy.top -= mainHeight - enemy.speed;
                 }
                 else{
-                    enemy.top += ENEMY_SPEED;
+                    enemy.top += enemy.speed;
                 }
             }
-            enemy.left -= ENEMY_SPEED;
+            enemy.left -= enemy.speed;
             enemy.style.top = enemy.top + "px";
             enemy.style.left = enemy.left + "px";
         }
@@ -409,7 +409,7 @@ function enemyMove2(enemyGroup){
     var group = enemyGroup.childNodes;
     for(var i = 0; i < group.length; i++){
         var enemy = group[i];
-        if(enemy.left - ENEMY_SPEED < 0){
+        if(enemy.left - enemy.speed < 0){
             enemyGroup.removeChild(enemy);
             i--;
         }
@@ -419,15 +419,34 @@ function enemyMove2(enemyGroup){
         }
         else{
             if(enemy.left < mainWidth){
-                if(enemy.top - ENEMY_SPEED < 0){
+                if(enemy.top - enemy.speed < 0){
                     enemy.top += mainHeight - enemy.height;
                 }
                 else{
-                    enemy.top -= ENEMY_SPEED;
+                    enemy.top -= enemy.speed;
                 }
             }
-            enemy.left -= ENEMY_SPEED;
+            enemy.left -= enemy.speed;
             enemy.style.top = enemy.top + "px";
+            enemy.style.left = enemy.left + "px";
+        }
+    }
+}
+
+function enemyMove3(enemyGroup){
+    var group = enemyGroup.childNodes;
+    for(var i = 0; i < group.length; i++){
+        var enemy = group[i];
+        if(enemy.left - enemy.speed < 0){
+            enemyGroup.removeChild(enemy);
+            i--;
+        }
+        else if(isShip(enemy)){
+            end();
+            return;
+        }
+        else{
+            enemy.left -= enemy.speed * 1.3;
             enemy.style.left = enemy.left + "px";
         }
     }

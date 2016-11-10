@@ -14,40 +14,22 @@ db.once('open', function() {
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	res.sendFile('test.html', { root: 'public' });
-	//res.render('SpaceCadet', { title: 'Express' });
+    res.sendFile('SpaceCadet.html', { root: 'public' });
 });
 
 router.post('/user', function(req,res,next){
-	var newUser=new User(req.body);
-	newUser.save(function(err, post){
-		if(err) return console.rror(err);
-	
+	var user = new User(req.body);
+    user.save(function(err, post){
+		if(err) return console.error(err);
+        res.end();
 	});
-	User.find().sort([['score','descending']]).limit(10).exec(function(err, scores){
-  		if (err) return console.error(err);
-		else{
-			console.log(scores);
-		}
-	});
-	User.find(function(err, userList){
-		if (err) return console.error(err);
-   		else {
-    		}
-  	});
-			
 });
 
 router.get('/user', function(req,res,next){
 		User.find().sort([['score','descending']]).limit(10).exec(function(err, scores){
-  		if (err) return console.error(err);
-		else{
-			console.log(scores);
-			res.json(scores);
-		}
+  		if(err) return console.error(err);
+		else res.json(scores);
 	});
 });
-
-
 
 module.exports = router;
